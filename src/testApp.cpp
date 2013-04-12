@@ -3,7 +3,7 @@
 //--------------------------------------------------------------
 void testApp::setup(){
 	ofSetLogLevel(OF_LOG_VERBOSE);
-	dir.allowExt("m4v");
+	dir.allowExt("mov");
 	dir.listDir("movies");
 	
 	ofBackground(127,127,127);
@@ -47,6 +47,7 @@ void testApp::exit()
 }
 //--------------------------------------------------------------
 void testApp::update(){
+
 	if(tcp.isConnected())
 	{
 		string msg = tcp.receive();
@@ -74,35 +75,57 @@ void testApp::update(){
 				}
 				else if(msg.find("timecode_")!=string::npos)
 				{
-					string sub = msg.substr(9,string::npos);
-					float position =  ofToFloat(sub);
+
+					vector<string>sub1 = ofSplitString(msg.substr(9,string::npos),";");;
+					
+					vector<string>sub2 = ofSplitString(sub1[0],"_");
+//					ofLogVerbose()<<sub2[0];
+					ofLogVerbose()<<sub2[1];
+					float position =  ofToFloat(sub2[0]);
+					unsigned long   timestamp =  strtoul(sub2[1].c_str(),NULL,10);
+					unsigned long   mytimeStamp = ofGetSystemTime();
+					unsigned long   diffTimeStamp = abs(long(mytimeStamp-timestamp));
+					ofLogVerbose("mytimeStamp")<< ofToString(mytimeStamp);
+					ofLogVerbose("timestamp")<< ofToString(timestamp);
+					ofLogVerbose("diffTimeStamp")<< ofToString(diffTimeStamp);
 					
 					if(position>0)
 					{
 						float curPosition = player.getPosition();
 						float dif = curPosition-position;
-						ofLogVerbose("position") << position;
-						ofLogVerbose("curPosition") << curPosition;
+//						ofLogVerbose("position") << position;
+//						ofLogVerbose("curPosition") << curPosition;
 						
 						float diff = ofGetElapsedTimeMillis() - currentTime;
 						//if time difference larger than 1% wouls set the current position to target
-						if(diff>3000)
+						if(diff>1000)
 						{
 							
 							if(abs(dif)>0.001 )
 							{
 								
-								player.setPosition(position);
-
+								player.setPosition(position+(diffTimeStamp/1000000.0f));
+//								player.setSpeed(1);
 								ofLogVerbose() << "Set Frame";
 							}
-							else
-							{
-								if(dif>0)
-									player.setSpeed(0.99999);
-								else
-									player.setSpeed(1.00001);
-							}
+//							else
+//							{
+//								if(dif>0)
+//								{
+//									ofLogVerbose() << "Slower";
+//
+//									player.setSpeed(0.9);
+//								}
+//								else if(dif<0)
+//								{
+//									ofLogVerbose() << "Faster";
+//									player.setSpeed(1.1);
+//								}
+//								else
+//								{
+//									player.setSpeed(1);
+//								}
+//							}
 							currentTime = ofGetElapsedTimeMillis();
 							
 						}
