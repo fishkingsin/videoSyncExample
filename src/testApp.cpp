@@ -3,7 +3,7 @@
 //--------------------------------------------------------------
 void testApp::setup(){
 	ofSetLogLevel(OF_LOG_VERBOSE);
-	dir.allowExt("mov");
+	dir.allowExt("m4v");
 	dir.listDir("movies");
 	
 	ofBackground(127,127,127);
@@ -54,50 +54,58 @@ void testApp::update(){
 		{
 			if(player.isLoaded())
 			{
-				
-				float position =  ofToFloat(msg);
-				if(position>0)
+				if(msg.find("video_")!=string::npos)
 				{
-					float curPosition = player.getPosition();
-					float dif = curPosition-position;
-					ofLogVerbose() << position;
-					if( dif > 0.01 )
+					vector<string>sub = ofSplitString(msg.substr(6,string::npos),";");;
+					ofLogVerbose()<< sub[0];
+					int index = ofToInt(sub[0]);
+					if(index >=0 && index<dir.getFiles().size())
 					{
-						speed=1-dif*0.01;
-						
-						
+						player.stop();
+						ofQTKitDecodeMode decodeMode = OF_QTKIT_DECODE_PIXELS_AND_TEXTURE;
+						currentVideoIdx = index;
+						player.loadMovie(dir.getPath(currentVideoIdx),decodeMode);
+						player.setSynchronousSeeking(true);
+						player.play();
+						player.setLoopState(OF_LOOP_NORMAL);
+
 					}
-					else if (dif < -0.01)
+					
+				}
+				else if(msg.find("timecode_")!=string::npos)
+				{
+					string sub = msg.substr(9,string::npos);
+					float position =  ofToFloat(sub);
+					
+					if(position>0)
 					{
-						speed=1-dif*0.01;
+						float curPosition = player.getPosition();
+						float dif = curPosition-position;
+						ofLogVerbose("position") << position;
+						ofLogVerbose("curPosition") << curPosition;
 						
-					}
-					else{
-						speed=1;
-					}
-					float diff = ofGetElapsedTimeMillis() - currentTime;
-					if(diff>3000)
-					{
-						//					ofLogVerbose("speed") <<speed;
-						
-						if(abs(dif)>0.001 && position>0)
+						float diff = ofGetElapsedTimeMillis() - currentTime;
+						//if time difference larger than 1% wouls set the current position to target
+						if(diff>3000)
 						{
-							//						int frame = position*player.getTotalNumFrames();
-							player.setPosition(position);
-							speed=1;
-							//						player.setSpeed(speed);
-							ofLogVerbose() << "Set Frame";
+							
+							if(abs(dif)>0.001 )
+							{
+								
+								player.setPosition(position);
+
+								ofLogVerbose() << "Set Frame";
+							}
+							else
+							{
+								if(dif>0)
+									player.setSpeed(0.99999);
+								else
+									player.setSpeed(1.00001);
+							}
+							currentTime = ofGetElapsedTimeMillis();
+							
 						}
-						//					else if(abs(dif)>0.005 ){
-						//						player.setSpeed(speed);
-						//												ofLogVerbose() << "Set Speed : " <<speed;
-						//					}
-						//					else if(abs(dif)<0.005){
-						//						player.setSpeed(1);
-						//						ofLogVerbose() << "Set Speed : " <<1	;
-						//					}
-						currentTime = ofGetElapsedTimeMillis();
-						
 					}
 				}
 			}
@@ -136,11 +144,11 @@ void testApp::keyPressed(int key){
 	switch(key)
 	{
 		case OF_KEY_BACKSPACE:
-	speed = 1;
-	player.setFrame(1);
+			speed = 1;
+			player.setFrame(1);
 			break;
 		case OF_KEY_LEFT:
-			z
+			
 			break;
 		case OF_KEY_RIGHT:
 			break;
