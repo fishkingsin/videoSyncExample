@@ -1,0 +1,6 @@
+*.app
+*.mov
+*.m4v
+*.xcuserstate
+
+*.xcworkspacedata
